@@ -1,0 +1,1 @@
+CUDA_VISILBE_DEVICES=0 python train_mms_model.py --use_video_ig65m --use_image_vit #--smooth_cos_labels

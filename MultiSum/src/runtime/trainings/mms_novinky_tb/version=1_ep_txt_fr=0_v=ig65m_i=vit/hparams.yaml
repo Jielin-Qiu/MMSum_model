@@ -1,0 +1,13 @@
+lr_init_val: 0
+lr_max_val: 0.0005
+lr_warmup_steps: 8000
+mask_video_features: false
+num_video_enc_layers: 4
+pre_trained_summeczech_ckpt: ''
+smooth_cos_labels: false
+start_with_text_frozen: 0
+use_image_effnet: false
+use_image_self_attention: true
+use_image_vit: true
+use_video_ig65m: true
+use_video_s3d: false
