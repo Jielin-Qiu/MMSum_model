@@ -64,4 +64,4 @@ We appreciate the public codebase from [MLASK](https://github.com/ufal/MLASK).
 
 ## License
 
-This project is licensed under the Apache-2.0 License.
+This project is licensed under the CC BY-NC-SA License.
