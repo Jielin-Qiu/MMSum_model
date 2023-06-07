@@ -13,7 +13,7 @@ conda activate multisum
 
 ### Download Datasets
 
-Please download the preprocessed data from this [link](https://drive.google.com/drive/folders/).
+Please download the preprocessed data from this [link](https://drive.google.com/drive/folders/1QRtU32oiTbAzU9swn1ZFFg0hxmpz3a3k?usp=sharing).
 
 There are 2 sets of training, validation, test sets.
 {set_name}.tsv is for the whole sentence and video environment and {set_name}_2.tsv is for the segmented video environment.
