@@ -42,21 +42,14 @@ class MMSDataset(Dataset):
             "tgt": self.tgt[idx],
             "_id": self._ids[idx],
         }
-        
-        # print(self.src[idx])
-        # print()
-        # print(self.tgt[idx])
 
         if self.use_ig65m:
-            # print('loading videos')
             _return_dict["video_features_ig65m"] = np.load(self.videos[idx]["ig65m"])
         if self.use_s3d_how100m:
             _return_dict["video_features_s3d"] = np.load(self.videos[idx]["s3d"])
 
         if self.use_vit:
-            # print('loading images')
             _return_dict["src_img_features_vit"] = np.load(self.src_imgs[idx]["vit"])
-            # print('loading targets')
             _return_dict["tgt_img_features_vit"] = np.load(self.tgt_imgs[idx]["vit"])
         if self.use_effnet:
             _return_dict["src_img_features_effnet"] = np.load(
@@ -83,9 +76,7 @@ class MMSDataset(Dataset):
         self.videos = []
         self._ids = []
         for _id in self.ids:
-            # print(_id)
             _video_paths = {}
-            # _video_dir = str(int(_id) // 200)
             _video_dir = _id
             if self.use_ig65m:
                 _video_paths["ig65m"] = os.path.join(
@@ -123,7 +114,6 @@ class MMSDataset(Dataset):
             _src_img_paths = {}
             _tgt_img_paths = {}
             # All the data instances are stored in a simple tree-like structure
-            # _img_dir = str(int(_id) // 200)
             _img_dir = _id
             if self.use_vit:
                 _src_img_paths["vit"] = os.path.join(
@@ -159,7 +149,6 @@ class MMSDataset(Dataset):
 
         self.ids = df.id.values
         self.src = df.article.values
-        # print(self.ids)
         if model_headline:
             self.tgt = df.headline.values
         else:
@@ -168,9 +157,6 @@ class MMSDataset(Dataset):
     def collate_fn(self, batch):
         max_src_len = self.args.max_src_len
         max_tgt_len = self.args.max_tgt_len
-
-        # test = [_item["src"] for _item in batch]
-        # print(test[0])
         
         # Source tokens
         src_encoded = self.tokenizer(
@@ -320,7 +306,6 @@ class MMSDataModule(pl.LightningDataModule):
     def __init__(self, args):
         super().__init__()
         train_set = MMSDataset(args, "train")
-        # val_set = MMSDataset(args, "dev")
         val_set = MMSDataset(args, "dev")
         test_set = MMSDataset(args, "test")
         self.train_loader = DataLoader(

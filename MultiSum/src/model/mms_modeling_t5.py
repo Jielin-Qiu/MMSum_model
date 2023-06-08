@@ -266,17 +266,12 @@ class MMST5Stack(T5PreTrainedModel): #encoder
 
             if use_video_ig65m:
                 if use_video_s3d:
-                    # print(MMS_IG65M_EM_SIZE)
-                    # print(MMS_S3D_EMB_SIZE)
                     self.mms_video_rotate = nn.modules.linear.Linear(
                         in_features=MMS_IG65M_EM_SIZE + MMS_S3D_EMB_SIZE,
                         out_features=config.d_model,
                         bias=False,
                     )
                 else:
-                    # print('else')
-                    # print(MMS_IG65M_EM_SIZE)
-                    # print(MMS_S3D_EMB_SIZE)
                     self.mms_video_rotate = nn.modules.linear.Linear(
                         in_features=MMS_IG65M_EM_SIZE,
                         out_features=config.d_model,
@@ -743,15 +738,6 @@ class MMST5Stack(T5PreTrainedModel): #encoder
         # Add last layer
         if output_hidden_states:
             all_hidden_states = all_hidden_states + (hidden_states,)
-        # print(hidden_states)
-        # print()
-        # print(all_hidden_states)
-        # print()
-        # print(all_attentions)
-        # print()
-        # print(all_cross_attentions)
-        # print()
-        # print(image_seq_emb_flattened)
         
         if not return_dict:
             return tuple(
@@ -945,8 +931,7 @@ class MMST5ForConditionalGeneration(T5PreTrainedModel):
             )
 
             # While training
-            # tgt_img_cosine_scores = None
-            # image_seq_emb_flattened = encoder_outputs[-1]
+
             if tgt_img_cosine_scores is not None:
                 image_seq_emb_flattened = encoder_outputs[-1]
                 image_summary_loss = nn.BCEWithLogitsLoss(reduction="none")
@@ -1045,8 +1030,6 @@ class MMST5ForConditionalGeneration(T5PreTrainedModel):
         )
 
         sequence_output = decoder_outputs[0]
-        # print('sequence')
-        # print(sequence_output.shape)
 
         # Set device for model parallelism
         if self.model_parallel:

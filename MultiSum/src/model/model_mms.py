@@ -34,7 +34,6 @@ cider_scorer = Cider()
 bertscore = load('bertscore')
 nltk.download('wordnet')
 nltk.download('omw-1.4')
-# nlg_eval = NLGEval()
 torch.set_num_threads(2)
 
 import re
@@ -90,6 +89,7 @@ class MultimodalTransformer(pl.LightningModule):
         start_with_text_frozen=0,
         mask_video_features=False,
         use_image_self_attention=True,
+        args = None,
     ):
         super().__init__()
         # Sanity checks
@@ -97,6 +97,7 @@ class MultimodalTransformer(pl.LightningModule):
         assert use_image_vit or use_image_effnet
         self.save_hyperparameters()
         self.model = None
+        self.args = args
         self._create_model()
 
     def _create_model(self):
@@ -198,14 +199,12 @@ class MultimodalTransformer(pl.LightningModule):
         )
 
     def training_step(self, batch, batch_idx):
-        # print(batch.keys())
         src_tokens = batch["src_ids"]
         src_padding_mask = batch["src_mask"]
         tgt_tokens = batch["tgt_ids"]
         tgt_padding_mask = batch["tgt_mask"]
         batch['src_img_cosine'] = []
         tgt_img_cosine_scores = batch["src_img_cosine"]
-        # print('hello 0')
 
         video_padding_mask = batch["video_mask"]
         image_padding_mask = batch["src_img_mask"]
@@ -237,7 +236,6 @@ class MultimodalTransformer(pl.LightningModule):
         if self.hparams.mask_video_features:
             video_ig65m_emb = torch.randn_like(video_ig65m_emb)
             video_s3d_emb = torch.randn_like(video_s3d_emb)
-        # print('hello 1 ')
         # Compute text summary loss
         text_summary_loss, image_selection_loss, *_ = self.forward(
             input_ids=src_tokens,
@@ -255,7 +253,6 @@ class MultimodalTransformer(pl.LightningModule):
             tgt_image_vit_emb=tgt_image_vit_emb,
             tgt_image_effnet_emb=tgt_image_effnet_emb,
         )
-        # print('hello 2 ')
         self.log(
             "img_loss",
             image_selection_loss,
@@ -282,8 +279,6 @@ class MultimodalTransformer(pl.LightningModule):
         # Video features
         if self.hparams.use_video_ig65m:
             video_ig65m_emb = batch["video_features_ig65m"]
-            # print('video_ig65m')
-            # print(video_ig65m_emb.shape)
         else:
             video_ig65m_emb = None
         if self.hparams.use_video_s3d:
@@ -294,8 +289,6 @@ class MultimodalTransformer(pl.LightningModule):
         # Image features
         if self.hparams.use_image_vit:
             image_vit_emb = batch["src_img_features_vit"]
-            # print('image_vit_emb')
-            # print(image_vit_emb.shape)
         else:
             image_vit_emb = None
         if self.hparams.use_image_effnet:
@@ -325,30 +318,6 @@ class MultimodalTransformer(pl.LightningModule):
         predicted_sent = self.tokenizer.batch_decode(
             txt_summary_tokens, skip_special_tokens=True
         )
-        # tgt_tokens = batch["tgt_ids"]
-        # tgt_padding_mask = batch["tgt_mask"]
-        # batch['src_img_cosine'] = []
-        # tgt_img_cosine_scores = batch["src_img_cosine"]
-        # image_vit_emb = batch["src_img_features_vit"]
-        # tgt_image_vit_emb = batch["tgt_img_features_vit"]
-        # tgt_image_effnet_emb = None
-        
-        # _, _, *out1 = self.forward(
-        #         input_ids=src_tokens,
-        #         attention_mask=src_padding_mask,
-        #         decoder_attention_mask=tgt_padding_mask,
-        #         labels=tgt_tokens,
-        #         return_dict=False,
-        #         video_ig65m_emb=video_ig65m_emb,
-        #         video_s3d_emb=video_s3d_emb,
-        #         image_vit_emb=image_vit_emb,
-        #         image_effnet_emb=image_effnet_emb,
-        #         video_padding_mask=video_padding_mask,
-        #         image_padding_mask=image_padding_mask,
-        #         tgt_img_cosine_scores=tgt_img_cosine_scores,
-        #         tgt_image_vit_emb=tgt_image_vit_emb,
-        #         tgt_image_effnet_emb=tgt_image_effnet_emb,
-        #     )
 
         # Use the encoder explicitly to obtain the per-frame scores
         *out2, per_frame_logits = self.model.encoder(
@@ -362,52 +331,25 @@ class MultimodalTransformer(pl.LightningModule):
             image_vit_emb=image_vit_emb,
             return_dict=False,
         )
-        # print('src_img_Features')
-        # print(image_vit_emb.shape)
-        # print('out')
-        # print(out1[0].shape)
-        # print()
-        # decoder_out = out1[1]
-        # print(out1[1].shape)
-        # print()
-        # print(out2[0].shape)
-        # print()
-        # print(len(out1[2]))
-        # print()
-        # try:
-        #     print(out1[2][0][0].shape)
-        # except:
-        #     print('out1[2][0] tuple')
-        # # print()
-        # try:
-        #     print(out1[3].shape)
-        # except:
-        #     print('out1[3] tuple')
-        # print()
-        # try:
-        #     print(out1[4].shape)
-        # except:
-        #     print('out1[4] tuple')
-        
-        
 
         per_frame_logits = per_frame_logits.masked_fill(image_padding_mask != 0.0, -1e6)
 
         return {"hyp": predicted_sent, "frame_scores": per_frame_logits, 
-                'encoder_hidden_state': out2[0]}#, 'decoder_hidden_state' : decoder_out}
+                'encoder_hidden_state': out2[0]}
 
     def validation_step(self, batch, batch_idx):
-        # print('hello 0 ')
         predictions = self.prediction_step(batch, batch_idx)
-        # print('hello 1')
         if self.hparams.use_image_vit:
-            # print(torch.unsqueeze(batch["tgt_img_features_vit"], 1).shape)
-            vit_cosine_sim = self.cosine_sim(
-                batch["src_img_features_vit"],
-                # batch["tgt_img_features_vit"],
-                torch.unsqueeze(batch["tgt_img_features_vit"], 1), # if training whole
-            )
-            # print(vit_cosine_sim)
+            if self.args.env == 'whole':
+                vit_cosine_sim = self.cosine_sim(
+                    batch["src_img_features_vit"],
+                    torch.unsqueeze(batch["tgt_img_features_vit"], 1), # if training whole
+                )
+            else:
+                vit_cosine_sim = self.cosine_sim(
+                    batch["src_img_features_vit"],
+                    batch["tgt_img_features_vit"], 
+                )
         if self.hparams.use_image_effnet:
             effnet_cosine_sim = self.cosine_sim(
                 batch["src_img_features_effnet"],
@@ -420,7 +362,6 @@ class MultimodalTransformer(pl.LightningModule):
         else:
             cosine_sim = vit_cosine_sim
 
-        # print('hello 2')
         cosine_sim = torch.where(
             cosine_sim > 0, cosine_sim, torch.zeros_like(cosine_sim)
         ).cpu()
@@ -428,19 +369,11 @@ class MultimodalTransformer(pl.LightningModule):
         cosine_sim_raw = cosine_sim.detach().clone()
 
         top_1_frame = torch.argmax(cosine_sim, dim=1)
-        # unique_values = torch.unique(top_1_frame)
-        # selected_frames = batch["video_features_ig65m"][:, unique_values, :]
-        # print('unique_values')
-        # print(top_1_frame)
         ids = batch['_id']
         hyp = predictions["hyp"],
         targ = batch["tgt"]
-        # sent = [sent for sent in hyp]
         sent = hyp[0]
         refs = [sent for sent in targ]
-        # print(len(sent))
-        # print(len(refs))
-        # print('hello 3')
         save_dic = {
             'sentences' : sent,
             'references' : refs,
@@ -448,27 +381,7 @@ class MultimodalTransformer(pl.LightningModule):
             'ids'       : ids
         }
         
-        np.save(f'results_whole_3/results_whole_{batch_idx}.npy', save_dic)
-        # print('hello 4')
-        
-        # Open the image
-        # image = Image.open("image.jpg")
-
-        # # Create a drawing object
-        # draw = ImageDraw.Draw(image)
-
-        # # Specify the font and size
-        # font = ImageFont.truetype("arial.ttf", size=24)
-
-        # # Specify the text content and position
-        # text = "Hello, World!"
-        # position = (50, 50)
-
-        # # Add the text to the image
-        # draw.text(position, text, font=font, fill=(255, 255, 255))
-
-        # # Save the modified image
-        # image.save("image_with_text.jpg")
+        np.save(f'results_whole/results_whole_{batch_idx}.npy', save_dic)
                 
 
         top_1_frame_onehot = torch.nn.functional.one_hot(
@@ -493,16 +406,6 @@ class MultimodalTransformer(pl.LightningModule):
             dim=1,
         ).view(-1)
         
-        # print('indices')
-        # print(indices)
-        # print('top_1_frame')
-        # print(top_1_frame)
-        # print('top_1_frame_onehot')
-        # print(top_1_frame_onehot)
-        # print('frame_Scores')
-        # print(predictions["frame_scores"])
-        # print('cosine')
-        # print(cosine_sim)
 
         # Average cosine similarity between top1 frame and target
         cnn_cos_scores = []
@@ -511,32 +414,22 @@ class MultimodalTransformer(pl.LightningModule):
                 torch.topk(predictions["frame_scores"].cpu(), dim=-1, k=1)[1].view(-1)
             )
         ):
-            # print(predictions['frame_scores'].cpu().shape)
             if self.hparams.use_image_effnet:
                 _cos1 = self.cosine_sim(
                     batch["tgt_img_features_effnet"][ind],
                     batch["src_img_features_effnet"][ind][top1_ind],
                 )
             if self.hparams.use_image_vit:
-                # print(batch['src_img_features_vit'].shape)
-                # print(batch["src_img_features_vit"][ind][top1_ind].shape)
-                # print(ind)
-                # print(top1_ind)
-                # print(batch['tgt_img_features_vit'].shape)
-                # print(batch["src_img_features_vit"][ind][top1_ind])
-                # print(batch["src_img_features_vit"].view(batch["src_img_features_vit"].shape[0], batch["src_img_features_vit"].shape[2]).shape)
-                # try:
-                _cos2 = self.cosine_sim(
-                    batch["tgt_img_features_vit"][ind],
-                    batch["src_img_features_vit"][ind][top1_ind],# for whole sentence
-                    # batch["src_img_features_vit"][ind][0],
-                )
-                # print(rmse)
-                # rsme = rmse(batch['tgt_img_features_vit'][ind].unsqueeze(), batch['src_img_features_vit'][ind])
-                # rmse(org_img=np.random.rand(3,2,1), pred_img=np.random.rand(3,2,1))
-                # except:
-                #     _cos2 = 0
-                # print(_cos2)
+                if self.args.env == 'whole':
+                    _cos2 = self.cosine_sim(
+                        batch["tgt_img_features_vit"][ind],
+                        batch["src_img_features_vit"][ind][top1_ind],
+                    )
+                else:
+                    _cos2 = self.cosine_sim(
+                        batch['tgt_img_features_vit'][ind],
+                        batch["src_img_features_vit"][ind][0],
+                    )
                 if self.hparams.use_image_effnet:
                     cnn_cos_scores.append((_cos1 + _cos2) / 2)
                 else:
@@ -549,22 +442,13 @@ class MultimodalTransformer(pl.LightningModule):
         pearson_r_scores = []
         kendall_tau_scores = []
        
-        # print(cosine_sim_raw.shape)
-        # for ind in range(batch["src_img_cosine"].shape[0]):
         for ind in range(predictions['frame_scores'].shape[0]):
             _nonmasked_vals = (
                 (predictions["frame_scores"][ind] == -1e6).nonzero().squeeze().view(-1)
             )
-            # print('non_masked_vals')
-            # print(_nonmasked_vals)
             
             if _nonmasked_vals.shape[0]:
                 _nonmasked_ind = _nonmasked_vals[0]
-                
-                # print(' predictions["frame_scores"][ind][:_nonmasked_ind]')
-                # print( predictions["frame_scores"][ind][:_nonmasked_ind])
-                # print('cosine_sim_raw[ind][:_nonmasked_ind]')
-                # print(cosine_sim_raw[ind][:_nonmasked_ind])
                 
                 try:
                     pearsonr_score = pearsonr(
@@ -590,44 +474,20 @@ class MultimodalTransformer(pl.LightningModule):
                     )[0]
                 )
             else:
-                # try:
-                    # print(cosine_sim_raw.shape)
-                    # print(ind)
-                    # print(predictions["frame_scores"].shape)
-                    # print(pearsonr(
-                    #         cosine_sim_raw[ind].numpy(),
-                    #         # predictions["frame_scores"][ind].cpu().detach().numpy(),
-                    #         predictions["frame_scores"].unsqueeze(1)[ind].cpu().detach().numpy(),
-                    #     )[0])
-                # print(cosine_sim_raw.shape)
-                # print(cosine_sim_raw[ind].shape)
-                # print(predictions["frame_scores"][ind].cpu().detach().numpy().shape)
-                # print(predictions["frame_scores"].cpu().detach().numpy().shape)
                 pearson_r_scores.append(
                     pearsonr(
-                        # cosine_sim_raw[ind].numpy(),
                         cosine_sim_raw[ind].numpy(),
                         predictions["frame_scores"][ind].cpu().detach().numpy(),
                     )[0]
                 )
-                
-                # except:
-                #     pearson_r_scores.append(0)
-                # try:
+
                 kendall_tau_scores.append(
                     kendalltau(
                         cosine_sim_raw[ind].numpy(),
                         predictions["frame_scores"][ind].cpu().detach().numpy(),
                     )[0]
                 )
-                # except:
-                    # kendall_tau_scores.append(0)
 
-        # Mean average Precision, top1 and above threshold
-        # print(predictions['frame_scores'].shape)
-        # print(predictions['frame_scores'].view(-1).shape)
-        # print(top_1_frame_onehot.view(-1).shape)
-        # print(indices.shape)
         rMAP_top = self.rMAP(
             preds=predictions["frame_scores"].cpu().view(-1),
             target=top_1_frame_onehot.view(-1),
@@ -704,14 +564,6 @@ class MultimodalTransformer(pl.LightningModule):
             indexes=indices,
         )
         
-        # print(predictions['frame_scores'].unsqueeze(2).shape)
-        # print(top_1_frame_onehot.unsqueeze(2).shape)
-        
-        # for i in range(len(batch['src_img_features_vit']))
-        # batch["tgt_img_features_vit"][ind],
-        # batch["src_img_features_vit"][ind][top1_ind],# for whole sentence
-        # batch["src_img_features_vit"][ind][0],
-        # print(batch["tgt_img_features_vit"].shape)
         rmse_scores = []
         psnr_scores = []
         ssim_scores = []
@@ -761,7 +613,6 @@ class MultimodalTransformer(pl.LightningModule):
             'SSIM_score' : ssim_score,
             'SRE_score'  : sre_score,
             'encoder_hidden_state' : predictions['encoder_hidden_state'],
-            # 'decoder_hidden_state' : predictions['decoder_hidden_state']
         }
 
     def validation_epoch_end(self, outputs):
@@ -877,14 +728,6 @@ class MultimodalTransformer(pl.LightningModule):
         # Text summarization evaluation
         predictions = [sent for _item in outputs for sent in _item["hyp"]]
         refs = [sent for _item in outputs for sent in _item["ref"]]
-        
-        # save_dic = {
-        #     'predictions' : predictions,
-        #     'refs'        : refs,
-        #     'frames'      : [_r["encoder_hidden_state"] for _r in outputs]
-        # }
-        
-        # np.save('results_whole_2.npy', save_dic)
 
         bleu_score = self.sacrebleu.corpus_score(predictions, refs).score
         rouge_score = self.rouge.corpus(refs, predictions)
@@ -903,16 +746,7 @@ class MultimodalTransformer(pl.LightningModule):
         
         refs = {str(i): r for i, r in enumerate(refs)}
         preds = {str(i): [clean_text(p)] for i, p in enumerate(predictions)}
-        # for i in preds.keys():
-        #     s = preds[f'{i}'][0]
-        #     r = refs[f'{i}'][0]
-        #     # print(r)
-        #     # print(len(r))
-        #     print(s)
-        #     print(len(s))
-        # print(refs)
-        # print()
-        # print(preds)
+
         try:
             spice_score, _ = spice_scorer.compute_score(refs, preds)
         except:

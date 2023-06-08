@@ -76,6 +76,13 @@ parser.add_argument(
     help="Manual versioning, to be able to compute variance for several runs.",
 )
 
+parser.add_argument(
+    "--env",
+    type=str,
+    default='whole',
+    help="Please choose text parsing setting; either whole or segment",
+)
+
 mms_args = parser.parse_args()
 
 training_name = (
@@ -100,15 +107,15 @@ if mms_args.mask_video_features:
 
 ROUGE_RAW_L_checkpoint = ModelCheckpoint(
     filename="{epoch}-{step}-{ROUGE_RAW_L_F:.2f}",
-    # monitor="ROUGE_RAW_L_F",
-    monitor = 'BLEU',
+    monitor="ROUGE_RAW_L_F",
+    # monitor = 'BLEU',
     mode="max",
     save_top_k=1,
 )
 
-# ROUGE_RAW_L_stop = EarlyStopping(monitor="ROUGE_RAW_L_F", mode="max", patience=5)
+ROUGE_RAW_L_stop = EarlyStopping(monitor="ROUGE_RAW_L_F", mode="max", patience=5)
 
-ROUGE_RAW_L_stop = EarlyStopping(monitor="BLEU", mode="max", patience=5)
+# ROUGE_RAW_L_stop = EarlyStopping(monitor="BLEU", mode="max", patience=5)
 
 # Section 6.3 in MLASK paper
 summeCzech_ckpt = "__PATH_TO_mT5_FINE-TUNED_ON_SumeCzech_DATASET__"
@@ -118,14 +125,10 @@ mms_data = MMSDataModule(
     argparse.Namespace(
         articles_path=f"{_data_base}/data/",
         video_ig65m_path=f"{_data_base}/data/videos",
-        # frames = f'{_data_base}/data/frames',
-        # video_s3d_path=f"{_data_base}/video_mp4/s3d_how100m",
         video_s3d_path = None,
         img_extract_vit_path=f"{_data_base}/data/keyframes",
         img_tgt_vit_path=f"{_data_base}/data/thumbnails",
-        # img_extract_eff_path=f"{_data_base}/video_mp4/efficientnet_b5",
         img_extract_eff_path = None,
-        # img_tgt_eff_path=f"{_data_base}/image_jpeg/efficientnet_b5",
         img_tgt_eff_path = None,
         model_headline=False,
         max_src_len=1536,
@@ -133,7 +136,6 @@ mms_data = MMSDataModule(
         train_batch_size=2,
         val_batch_size=16,
         num_workers=16,
-        
     )
 )
 
@@ -167,6 +169,7 @@ model = MultimodalTransformer(
     else "",
     start_with_text_frozen=mms_args.start_with_text_frozen,
     mask_video_features=mms_args.mask_video_features,
+    args = mms_args
 )
 
 trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
