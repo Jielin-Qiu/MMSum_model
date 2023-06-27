@@ -13,7 +13,7 @@ conda activate multisum
 
 ### Download Datasets and Preprocessing
 
-Please download the video, keyframe, thumbnail features from this [link](https://drive.google.com/drive/folders/1QRtU32oiTbAzU9swn1ZFFg0hxmpz3a3k?usp=sharing).
+Please download the video, keyframe, thumbnail features from this [link](https://drive.google.com/drive/folders/1ZE3p7JmoZe0EK-HIxpKrYUdHqXwFabUf?usp=sharing).
 
 We provide the scripts [keyframe_feature.py, text_feature.py, video_feature.py] to create the features for the whole text environment.
 We provide code to generate the segmented text environment data in seg_video_feature.py and video_feature_multisum.py.
