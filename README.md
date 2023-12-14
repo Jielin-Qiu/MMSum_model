@@ -1,4 +1,4 @@
-# MultiSum: A Dataset for Multimodal Summarization and Thumbnail Generation of Videos
+# MMSum: A Dataset for Multimodal Summarization and Thumbnail Generation of Videos
 
 ## Usage
 
@@ -46,8 +46,8 @@ python generate_thumbnail.py
 ### Citation
 
 ```
-@inproceedings{Qiu2023MultiSumAD,
-    title={MultiSum: A Dataset for Multimodal Summarization and Thumbnail Generation of Videos},
+@inproceedings{Qiu2023MMSumAD,
+    title={MMSum: A Dataset for Multimodal Summarization and Thumbnail Generation of Videos},
     author={Jielin Qiu and Jiacheng Zhu and William Han and Aditesh Kumar and Karthik Mittal
             and Claire Jin and Zhengyuan Yang and Linjie Li and Jianfeng Wang
             and Bo Li and Ding Zhao and Lijuan Wang},
