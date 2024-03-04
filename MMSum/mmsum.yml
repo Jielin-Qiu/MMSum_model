@@ -1,4 +1,4 @@
-name: multisum
+name: mmsum
 channels:
   - defaults
 dependencies:
@@ -213,4 +213,3 @@ dependencies:
       - xxhash==3.2.0
       - yarl==1.9.2
       - zipp==3.15.0
-prefix: /home/william/anaconda3/envs/mlask

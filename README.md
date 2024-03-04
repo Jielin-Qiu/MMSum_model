@@ -7,8 +7,8 @@
 Create a conda virtual environment and activate it.
 
 ```
-conda env create -f MultiSum/multisum.yml
-conda activate multisum
+conda env create -f MMSum/mmsum.yml
+conda activate mmsum
 ```
 
 ### Download Datasets and Preprocessing
