@@ -16,16 +16,16 @@ conda activate mmsum
 Please download the video, keyframe, thumbnail features from this [link](https://drive.google.com/drive/folders/1ZE3p7JmoZe0EK-HIxpKrYUdHqXwFabUf?usp=sharing).
 
 We provide the scripts [keyframe_feature.py, text_feature.py, video_feature.py] to create the features for the whole text environment.
-We provide code to generate the segmented text environment data in seg_video_feature.py and video_feature_multisum.py.
+We provide code to generate the segmented text environment data in seg_video_feature.py and video_feature_mmsum.py.
 
 After preprocessing, there should be 2 sets of training, validation, test sets.
 {set_name}.tsv is for the whole sentence and video environment and {set_name}_2.tsv is for the segmented video environment.
 
-Please place them in MultiSum/src/data.
+Please place them in MMSum/src/data.
 
 ### Training and Evaluation
 
-For training, please cd into MultiSum/src/runtime and run the following command:
+For training, please cd into MMSum/src/runtime and run the following command:
 
 ```
 sh train.sh
