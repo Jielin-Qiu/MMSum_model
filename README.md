@@ -1,6 +1,6 @@
 # MMSum: A Dataset for Multimodal Summarization and Thumbnail Generation of Videos
 
-In CVPR 2024
+In CVPR 2024 [paper](https://arxiv.org/abs/2306.04216)
 
 ## Usage
 
@@ -52,7 +52,7 @@ python generate_thumbnail.py
     title={MMSum: A Dataset for Multimodal Summarization and Thumbnail Generation of Videos},
     author={Jielin Qiu and Jiacheng Zhu and William Han and Aditesh Kumar and Karthik Mittal
             and Claire Jin and Zhengyuan Yang and Linjie Li and Jianfeng Wang
-            and Bo Li and Ding Zhao and Lijuan Wang},
+            and Ding Zhao and Bo Li and Lijuan Wang},
     journal={CVPR},
     year={2024}
 ```
