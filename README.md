@@ -2,6 +2,8 @@
 
 In CVPR 2024 [paper](https://arxiv.org/abs/2306.04216)
 
+Project page: [link](https://mmsum-dataset.github.io/)
+
 ## Usage
 
 ### Set up Environment
