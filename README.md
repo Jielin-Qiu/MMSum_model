@@ -27,6 +27,8 @@ After preprocessing, there should be 2 sets of training, validation, test sets.
 
 Please place them in MMSum/src/data.
 
+If you want to know how the data was collected, please go to our [data collection repo](https://github.com/Jason-Qiu/MMSum_Data_Collection_Tool).
+
 ### Training and Evaluation
 
 For training, please cd into MMSum/src/runtime and run the following command:
